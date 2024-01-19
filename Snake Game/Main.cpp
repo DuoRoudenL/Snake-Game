@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <ctime>
 
 #include <conio.h>
 
@@ -7,6 +8,8 @@
 
 int main()
 {
+    srand(time(NULL));
+
     Field field = Field(30, 30);
     int fieldHight = field.getHight();
     int fieldWidth = field.getWidth();
@@ -16,12 +19,26 @@ int main()
     int entityXPosition = entity.getXPosition();
     int entityYPosition = entity.getYPosition();
 
+    int appleXPosition, appleYPosition;
+    while (true) {
+        appleXPosition = 1 + rand() % (fieldWidth - 3 + 1);
+        appleYPosition = 1 + rand() % (fieldHight - 3 + 1);
+        if (!(appleXPosition == entityXPosition && appleYPosition == entityYPosition)) {
+            break;
+        }
+    }
+    std::string appleCharacter = ".";
+    Entity apple = Entity(appleCharacter[0], appleXPosition, appleYPosition);
+    field.setCharacter(appleCharacter, appleXPosition, appleYPosition);
+
     char button = ' ';
+    int score = 0;
 
     while (button != 'q') {
-        
+
         field.setCharacter(entityCharactet, entityXPosition, entityYPosition);
         field.print();
+        std::cout << "Score: " << score;
 
         field.setCharacter(" ", entityXPosition, entityYPosition);
 
@@ -53,6 +70,20 @@ int main()
 
         entityXPosition = entity.getXPosition();
         entityYPosition = entity.getYPosition();
+
+        if (entityXPosition == apple.getXPosition() && entityYPosition == apple.getYPosition()) {
+            score++;
+            while (true) {
+                appleXPosition = 1 + rand() % (fieldWidth - 3 + 1);
+                appleYPosition = 1 + rand() % (fieldHight - 3 + 1);
+                if (!(appleXPosition == entityXPosition && appleYPosition == entityYPosition)) {
+                    break;
+                }
+            }
+            apple.setXPosition(appleXPosition);
+            apple.setYPosition(appleYPosition);
+            field.setCharacter(appleCharacter, appleXPosition, appleYPosition);
+        }
         
         system("cls");
     }
