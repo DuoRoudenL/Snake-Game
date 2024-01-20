@@ -1,43 +1,41 @@
 ﻿#include <iostream>
 
 #include <conio.h>
+#include <windows.h>
 
 #include "Field.h"
 #include "Entity.h"
 #include "RoufenLibrary.h"
 
-int main()
-{
-    Field field = Field(30, 30);
-    int fieldHight = field.getHight();
-    int fieldWidth = field.getWidth();
+int main() {
+    int fieldWidth = 30, fieldHight = 30;
+    Field field = Field(fieldWidth, fieldHight);
 
-    Entity entity = Entity('@', fieldWidth / 2, fieldHight / 2);
-    std::string entityCharactet = std::string(1, entity.getCharacter());
-    int entityXPosition = entity.getXPosition();
-    int entityYPosition = entity.getYPosition();
+    char entityCharacter = 'o';
+    int entityXPosition = fieldWidth / 2, entityYPosition = fieldHight / 2;
+    Entity entity = Entity(entityCharacter, entityXPosition, entityYPosition);
 
+    char appleCharacter = '*';
     int appleXPosition, appleYPosition;
     while (true) {
-        appleXPosition = random(1, fieldWidth - 2);
-        appleYPosition = random(1, fieldHight - 2);
-        if (field.checkCharacter(' ', appleXPosition, appleYPosition)) {
-            break;
-        }
+        appleXPosition = random(2, fieldWidth - 3);
+        appleYPosition = random(2, fieldHight - 3);
+        bool isSpaceCollision = field.checkCharacter(' ', appleXPosition, appleYPosition);
+        bool isBodyCollision = field.checkCharacter(entityCharacter, appleYPosition, appleYPosition);
+        if (isSpaceCollision && !isBodyCollision) break;
     }
-    std::string appleCharacter = ".";
-    Entity apple = Entity(appleCharacter[0], appleXPosition, appleYPosition);
-    field.setCharacter(appleCharacter, appleXPosition, appleYPosition);
+    Entity apple = Entity(appleCharacter, appleXPosition, appleYPosition);
+    field.setCharacter(std::string(1, appleCharacter), appleXPosition, appleYPosition);
 
     std::vector <Entity> body;
 
-    char button = ' ';
+    char direction = ' ';
     int score = 0, tempXPosition, tempYPosition;
 
-    while (button != 'q') {
-
-        field.setCharacter(entityCharactet, entityXPosition, entityYPosition);
-
+    while (!GetAsyncKeyState('Q')) {
+        system("cls");
+        
+        field.setCharacter(std::string(1, entityCharacter), entityXPosition, entityYPosition);
         for (int i = 0; i < body.size(); i++) {
             field.setCharacter(std::string(1, body[i].getCharacter()), body[i].getXPosition(), body[i].getYPosition());
         }
@@ -50,34 +48,35 @@ int main()
         tempXPosition = entityXPosition;
         tempYPosition = entityYPosition;
 
-        button = _getch();
-        switch (button) {
-        case 'w':
-            if (!field.checkCharacter('#', entityXPosition, entity.getYPosition() - 1)) {
-                entity.setYPosition(entity.getYPosition() - 1);
-            }
-            break;
-        case 'a':
-            if (!field.checkCharacter('#', entity.getXPosition() - 1, entityYPosition)) {
-                entity.setXPosition(entity.getXPosition() - 1);
-            }
-            break;
-        case 's':
-            if (!field.checkCharacter('#', entityXPosition, entity.getYPosition() + 1)) {
-                entity.setYPosition(entity.getYPosition() + 1);
-            }
-            break;
-        case 'd':
-            if (!field.checkCharacter('#', entity.getXPosition() + 1, entityYPosition)) {
-                entity.setXPosition(entity.getXPosition() + 1);
-            }
-            break;
-        default:
-            break;
-        }
-
+        if (GetAsyncKeyState('W')) direction = 'w';
+        else if (GetAsyncKeyState('A')) direction = 'a';
+        else if (GetAsyncKeyState('S')) direction = 's';
+        else if (GetAsyncKeyState('D')) direction = 'd';
+        userInputController(direction, entity);
+ 
         entityXPosition = entity.getXPosition();
         entityYPosition = entity.getYPosition();
+
+        if (entityXPosition == appleXPosition && entityYPosition == appleYPosition) {
+            score++;
+            while (true) {
+                appleXPosition = random(2, fieldWidth - 3);
+                appleYPosition = random(2, fieldHight - 3);
+                bool isSpaceCollision = field.checkCharacter(' ', appleXPosition, appleYPosition);
+                if (isSpaceCollision) break;
+            }
+            apple.setXPosition(appleXPosition);
+            apple.setYPosition(appleYPosition);
+            field.setCharacter(std::string(1, appleCharacter), appleXPosition, appleYPosition);
+            body.push_back(Entity(entityCharacter, tempXPosition, tempYPosition));
+        }
+
+        bool isWallColision = field.checkCharacter('#', entityXPosition, entityYPosition);
+        bool isBodyColision = field.checkCharacter(entityCharacter, entityXPosition, entityYPosition);
+        if (isWallColision || isBodyColision) {
+            std::cout << std::endl << "Game Over!";
+            break;
+        }
 
         for (int i = body.size() - 1; i >= 0; i--) {
             field.setCharacter(" ", body[i].getXPosition(), body[i].getYPosition());
@@ -91,21 +90,7 @@ int main()
             }
         }
 
-        if (entityXPosition == apple.getXPosition() && entityYPosition == apple.getYPosition()) {
-            score++;
-            while (true) {
-                appleXPosition = random(1, fieldWidth - 2);
-                appleYPosition = random(1, fieldHight - 2);
-                if (field.checkCharacter(' ', appleXPosition, appleYPosition)) {
-                    break;
-                }
-            }
-            apple.setXPosition(appleXPosition);
-            apple.setYPosition(appleYPosition);
-            field.setCharacter(appleCharacter, appleXPosition, appleYPosition);
-            body.push_back(Entity('@', tempXPosition, tempYPosition));
-        }
-
-        system("cls");
+        int speed = 30;
+        Sleep(speed);
     }
 }
